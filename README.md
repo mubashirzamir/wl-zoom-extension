@@ -14,7 +14,7 @@ This extension has been tested to be compatible with Cinnamon 6.4.
 
 ## Installation
 
-1. Copy the extension folder to `~/.local/share/cinnamon/extensions/window-list-zoom@mubashirzamir`
+1. Copy the extension folder to `~/.local/share/cinnamon/extensions/wl-zoom@mubashirzamir`
 2. Reload Cinnamon (`Alt+F2` → `r` → `Enter`, or log out/in)
 3. Enable it in **Cinnamon Settings → Extensions**
 4. Click the gear icon next to the extension to adjust the zoom factor

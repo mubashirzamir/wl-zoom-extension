@@ -4,7 +4,7 @@ const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 const Settings = imports.ui.settings;
 
-const UUID = "window-list-zoom@mubashirzamir";
+const UUID = "wl-zoom@mubashirzamir";
 
 let settings;
 let windowListStates = {};
