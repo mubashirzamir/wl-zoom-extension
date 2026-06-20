@@ -10,30 +10,17 @@ let settings;
 let panelStates = {};
 let panelAddedSignal;
 
-// bindProperty(sync_type, key_name, applet_var, callback, user_data) always
-// writes onto the single object passed into the *Settings constructor.
-// So every location's properties live flat on this one object.
 let panelSettings = {
-    topEnabled: true,
-    topZoomFactor: 1.3,
-    bottomEnabled: true,
-    bottomZoomFactor: 1.3,
-    leftEnabled: false,
-    leftZoomFactor: 1.3,
-    rightEnabled: false,
-    rightZoomFactor: 1.3
+    zoomEnabled: true,
+    zoomFactor: 1.3
 };
 
-function init(metadata) {
-}
+function init(metadata) {}
 
 function enable() {
     settings = new Settings.ExtensionSettings(panelSettings, UUID);
 
-    bindLocationSettings("top");
-    bindLocationSettings("bottom");
-    bindLocationSettings("left");
-    bindLocationSettings("right");
+    bindZoomSettings();
 
     Main.panelManager.panels.forEach(panel => {
         initPanel(panel);
@@ -42,65 +29,26 @@ function enable() {
     panelAddedSignal = Main.panelManager.connect('panel-added', function(manager, panel) {
         try {
             initPanel(panel);
-        } catch(e) {}
+        } catch (e) {}
     });
 }
 
-function bindLocationSettings(location) {
+function bindZoomSettings() {
     settings.bindProperty(
         Settings.BindingDirection.IN,
-        location + "-enabled",
-        location + "Enabled",
+        "zoom-enabled",
+        "zoomEnabled",
         null,
         null
     );
 
     settings.bindProperty(
         Settings.BindingDirection.IN,
-        location + "-zoomFactor",
-        location + "ZoomFactor",
+        "zoom-zoomFactor",
+        "zoomFactor",
         null,
         null
     );
-}
-
-function getSettingsForLocation(location) {
-    switch (location) {
-        case "top":
-            return { enabled: panelSettings.topEnabled, zoomFactor: panelSettings.topZoomFactor };
-        case "bottom":
-            return { enabled: panelSettings.bottomEnabled, zoomFactor: panelSettings.bottomZoomFactor };
-        case "left":
-            return { enabled: panelSettings.leftEnabled, zoomFactor: panelSettings.leftZoomFactor };
-        case "right":
-            return { enabled: panelSettings.rightEnabled, zoomFactor: panelSettings.rightZoomFactor };
-        default:
-            return null;
-    }
-}
-
-function getPanelLocation(panel) {
-    if (!panel || !panel.actor) return "unknown";
-
-    let monitor = Main.layoutManager.findMonitorForActor(panel.actor);
-    if (!monitor) return "unknown";
-
-    let panelY = panel.actor.y;
-    let panelX = panel.actor.x;
-    let panelWidth = panel.actor.width;
-    let panelHeight = panel.actor.height;
-
-    if (panelY <= monitor.y + 10) {
-        return "top";
-    } else if (panelY + panelHeight >= monitor.y + monitor.height - 10) {
-        return "bottom";
-    } else if (panelX <= monitor.x + 10) {
-        return "left";
-    } else if (panelX + panelWidth >= monitor.x + monitor.width - 10) {
-        return "right";
-    }
-
-    return "unknown";
 }
 
 function initPanel(panel) {
@@ -109,8 +57,7 @@ function initPanel(panel) {
 
     panelStates[panel.panelId] = {
         zoomEnterId: null,
-        zoomLeaveId: null,
-        location: getPanelLocation(panel)
+        zoomLeaveId: null
     };
 
     setupAppletZoom(panel);
@@ -126,38 +73,43 @@ function setupAppletZoom(panel) {
 
     try {
         state.zoomEnterId = panel.actor.connect('enter-event', function(actor, event) {
-            let locationSettings = getSettingsForLocation(state.location);
-            if (!locationSettings || !locationSettings.enabled) return;
+            if (!panelSettings.zoomEnabled) return;
 
-            let target = event.get_source();
-            if (target && target !== panel.actor && !isLayoutContainer(target)) {
-                zoomApplet(target, true, locationSettings.zoomFactor);
+            let target = findGroupedWindowListButton(event.get_source(), panel.actor);
+            if (target) {
+                zoomApplet(target, true, panelSettings.zoomFactor);
             }
         });
 
         state.zoomLeaveId = panel.actor.connect('leave-event', function(actor, event) {
-            let target = event.get_source();
-            if (target && target !== panel.actor) {
+            let target = findGroupedWindowListButton(event.get_source(), panel.actor);
+            if (target) {
                 zoomApplet(target, false, 1.0);
             }
         });
-    } catch(e) {
+    } catch (e) {
         cleanupAppletZoom(panel);
     }
 }
 
-function isLayoutContainer(actor) {
-    let actorType = actor.toString();
+const GROUPED_WINDOW_LIST_ITEM_CLASS = 'grouped-window-list-item-box';
 
-    if (actorType.includes('StBoxLayout') ||
-        actorType.includes('St.BoxLayout') ||
-        actorType.includes('StBin') ||
-        actorType.includes('ClutterActor') ||
-        actorType.includes('St.Bin')) {
-        return true;
+function findGroupedWindowListButton(actor, panelActor) {
+    let current = actor;
+
+    while (current && current !== panelActor) {
+        try {
+            if (current.has_style_class_name &&
+                current.has_style_class_name(GROUPED_WINDOW_LIST_ITEM_CLASS)) {
+                return current;
+            }
+        } catch (e) {
+            return null;
+        }
+        current = current.get_parent ? current.get_parent() : null;
     }
 
-    return false;
+    return null;
 }
 
 function cleanupAppletZoom(panel) {
@@ -169,14 +121,14 @@ function cleanupAppletZoom(panel) {
     if (typeof state.zoomEnterId === 'number') {
         try {
             panel.actor.disconnect(state.zoomEnterId);
-        } catch(e) {}
+        } catch (e) {}
         state.zoomEnterId = null;
     }
 
     if (typeof state.zoomLeaveId === 'number') {
         try {
             panel.actor.disconnect(state.zoomLeaveId);
-        } catch(e) {}
+        } catch (e) {}
         state.zoomLeaveId = null;
     }
 }
@@ -186,7 +138,6 @@ function zoomApplet(actor, zoomIn, zoomFactor) {
 
     try {
         Tweener.removeTweens(actor);
-
         actor.set_pivot_point(0.5, 0.5);
 
         let targetScale = zoomIn ? zoomFactor : 1.0;
@@ -197,7 +148,7 @@ function zoomApplet(actor, zoomIn, zoomFactor) {
             time: 0.15,
             transition: 'easeOutQuad'
         });
-    } catch(e) {}
+    } catch (e) {}
 }
 
 function resetAllAppletZoom(panel) {
@@ -214,9 +165,9 @@ function resetAllAppletZoom(panel) {
                     Tweener.removeTweens(child);
                     child.set_pivot_point(0.5, 0.5);
                     child.set_scale(1.0, 1.0);
-                } catch(e) {}
+                } catch (e) {}
             });
-        } catch(e) {}
+        } catch (e) {}
     });
 }
 
@@ -224,7 +175,7 @@ function disable() {
     if (panelAddedSignal) {
         try {
             Main.panelManager.disconnect(panelAddedSignal);
-        } catch(e) {}
+        } catch (e) {}
         panelAddedSignal = null;
     }
 
