@@ -4,5 +4,6 @@
   "description": "Adds a hover zoom effect to window list icons",
   "version": "1.0",
   "cinnamon-version": ["6.4"],
-  "author": "mubashirzamir"
+  "author": "mubashirzamir",
+  "url": "https://github.com/mubashirzamir/window-list-zoom-extension"
 }
