@@ -7,7 +7,7 @@
         "type": "switch",
         "default": true,
         "description": "Enable zoom effect",
-        "tooltip": "Apply a hover zoom effect to icons in the grouped window list"
+        "tooltip": "Apply a hover zoom effect to window list icons"
     },
     "zoom-zoomFactor": {
         "type": "scale",

@@ -4,13 +4,13 @@ const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 const Settings = imports.ui.settings;
 
-const UUID = "panel-zoom@mubashirzamir";
+const UUID = "window-list-zoom@mubashirzamir";
 
 let settings;
-let panelStates = {};
-let panelAddedSignal;
+let windowListStates = {};
+let panelAddedHandlerId;
 
-let panelSettings = {
+let defaultSettings = {
     zoomEnabled: true,
     zoomFactor: 1.3
 };
@@ -18,17 +18,17 @@ let panelSettings = {
 function init(metadata) {}
 
 function enable() {
-    settings = new Settings.ExtensionSettings(panelSettings, UUID);
+    settings = new Settings.ExtensionSettings(defaultSettings, UUID);
 
     bindZoomSettings();
 
     Main.panelManager.panels.forEach(panel => {
-        initPanel(panel);
+        initWindowListZoom(panel);
     });
 
-    panelAddedSignal = Main.panelManager.connect('panel-added', function(manager, panel) {
+    panelAddedHandlerId = Main.panelManager.connect('panel-added', function(manager, panel) {
         try {
-            initPanel(panel);
+            initWindowListZoom(panel);
         } catch (e) {}
     });
 }
@@ -51,56 +51,56 @@ function bindZoomSettings() {
     );
 }
 
-function initPanel(panel) {
+function initWindowListZoom(panel) {
     if (!panel || !panel.actor) return;
-    if (panelStates[panel.panelId]) return;
+    if (windowListStates[panel.panelId]) return;
 
-    panelStates[panel.panelId] = {
+    windowListStates[panel.panelId] = {
         zoomEnterId: null,
         zoomLeaveId: null
     };
 
-    setupAppletZoom(panel);
+    setupWindowListZoom(panel);
 }
 
-function setupAppletZoom(panel) {
+function setupWindowListZoom(panel) {
     if (!panel || !panel.actor) return;
 
-    let state = panelStates[panel.panelId];
+    let state = windowListStates[panel.panelId];
     if (!state) return;
 
-    cleanupAppletZoom(panel);
+    cleanupWindowListZoom(panel);
 
     try {
         state.zoomEnterId = panel.actor.connect('enter-event', function(actor, event) {
-            if (!panelSettings.zoomEnabled) return;
+            if (!defaultSettings.zoomEnabled) return;
 
-            let target = findGroupedWindowListButton(event.get_source(), panel.actor);
+            let target = findWindowListButton(event.get_source(), panel.actor);
             if (target) {
-                zoomApplet(target, true, panelSettings.zoomFactor);
+                zoomButton(target, true, defaultSettings.zoomFactor);
             }
         });
 
         state.zoomLeaveId = panel.actor.connect('leave-event', function(actor, event) {
-            let target = findGroupedWindowListButton(event.get_source(), panel.actor);
+            let target = findWindowListButton(event.get_source(), panel.actor);
             if (target) {
-                zoomApplet(target, false, 1.0);
+                zoomButton(target, false, 1.0);
             }
         });
     } catch (e) {
-        cleanupAppletZoom(panel);
+        cleanupWindowListZoom(panel);
     }
 }
 
-const GROUPED_WINDOW_LIST_ITEM_CLASS = 'grouped-window-list-item-box';
+const WINDOW_LIST_ITEM_CLASS = 'grouped-window-list-item-box';
 
-function findGroupedWindowListButton(actor, panelActor) {
+function findWindowListButton(actor, panelActor) {
     let current = actor;
 
     while (current && current !== panelActor) {
         try {
             if (current.has_style_class_name &&
-                current.has_style_class_name(GROUPED_WINDOW_LIST_ITEM_CLASS)) {
+                current.has_style_class_name(WINDOW_LIST_ITEM_CLASS)) {
                 return current;
             }
         } catch (e) {
@@ -112,10 +112,10 @@ function findGroupedWindowListButton(actor, panelActor) {
     return null;
 }
 
-function cleanupAppletZoom(panel) {
+function cleanupWindowListZoom(panel) {
     if (!panel || !panel.actor) return;
 
-    let state = panelStates[panel.panelId];
+    let state = windowListStates[panel.panelId];
     if (!state) return;
 
     if (typeof state.zoomEnterId === 'number') {
@@ -133,7 +133,7 @@ function cleanupAppletZoom(panel) {
     }
 }
 
-function zoomApplet(actor, zoomIn, zoomFactor) {
+function zoomButton(actor, zoomIn, zoomFactor) {
     if (!actor) return;
 
     try {
@@ -151,7 +151,7 @@ function zoomApplet(actor, zoomIn, zoomFactor) {
     } catch (e) {}
 }
 
-function resetAllAppletZoom(panel) {
+function resetAllWindowListZoom(panel) {
     if (!panel) return;
     if (!panel._leftBox || !panel._centerBox || !panel._rightBox) return;
 
@@ -172,24 +172,24 @@ function resetAllAppletZoom(panel) {
 }
 
 function disable() {
-    if (panelAddedSignal) {
+    if (panelAddedHandlerId) {
         try {
-            Main.panelManager.disconnect(panelAddedSignal);
+            Main.panelManager.disconnect(panelAddedHandlerId);
         } catch (e) {}
-        panelAddedSignal = null;
+        panelAddedHandlerId = null;
     }
 
     Main.panelManager.panels.forEach(panel => {
         if (!panel || !panel.actor) return;
 
-        let state = panelStates[panel.panelId];
+        let state = windowListStates[panel.panelId];
         if (state) {
-            cleanupAppletZoom(panel);
-            resetAllAppletZoom(panel);
+            cleanupWindowListZoom(panel);
+            resetAllWindowListZoom(panel);
         }
     });
 
-    panelStates = {};
+    windowListStates = {};
 
     if (settings) {
         settings.finalize();

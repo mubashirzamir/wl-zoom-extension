@@ -1,8 +1,0 @@
-{
-  "uuid": "panel-zoom@mubashirzamir",
-  "name": "Panel Zoom.",
-  "description": "Panel zoom effect.",
-  "version": "1.0",
-  "cinnamon-version": ["6.4"],
-  "author": "mubashirzamir"
-}
