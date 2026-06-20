@@ -1,0 +1,89 @@
+{
+    "top-section": {
+        "type": "header",
+        "description": "Top Panel"
+    },
+    "top-enabled": {
+        "type": "switch",
+        "default": true,
+        "description": "Enable zoom effect",
+        "tooltip": "Apply the hover zoom effect to panels at the top of the screen"
+    },
+    "top-zoomFactor": {
+        "type": "scale",
+        "default": 1.3,
+        "min": 1.0,
+        "max": 2.0,
+        "step": 0.1,
+        "units": "x",
+        "description": "Zoom scale factor",
+        "tooltip": "How much applets grow when you hover over the panel",
+        "dependency": "top-enabled"
+    },
+
+    "bottom-section": {
+        "type": "header",
+        "description": "Bottom Panel"
+    },
+    "bottom-enabled": {
+        "type": "switch",
+        "default": true,
+        "description": "Enable zoom effect",
+        "tooltip": "Apply the hover zoom effect to panels at the bottom of the screen"
+    },
+    "bottom-zoomFactor": {
+        "type": "scale",
+        "default": 1.3,
+        "min": 1.0,
+        "max": 2.0,
+        "step": 0.1,
+        "units": "x",
+        "description": "Zoom scale factor",
+        "tooltip": "How much applets grow when you hover over the panel",
+        "dependency": "bottom-enabled"
+    },
+
+    "left-section": {
+        "type": "header",
+        "description": "Left Panel"
+    },
+    "left-enabled": {
+        "type": "switch",
+        "default": false,
+        "description": "Enable zoom effect",
+        "tooltip": "Apply the hover zoom effect to panels on the left side of the screen"
+    },
+    "left-zoomFactor": {
+        "type": "scale",
+        "default": 1.3,
+        "min": 1.0,
+        "max": 2.0,
+        "step": 0.1,
+        "units": "x",
+        "description": "Zoom scale factor",
+        "tooltip": "How much applets grow when you hover over the panel",
+        "dependency": "left-enabled"
+    },
+
+    "right-section": {
+        "type": "header",
+        "description": "Right Panel"
+    },
+    "right-enabled": {
+        "type": "switch",
+        "default": false,
+        "description": "Enable zoom effect",
+        "tooltip": "Apply the hover zoom effect to panels on the right side of the screen"
+    },
+    "right-zoomFactor": {
+        "type": "scale",
+        "default": 1.3,
+        "min": 1.0,
+        "max": 2.0,
+        "step": 0.1,
+        "units": "x",
+        "description": "Zoom scale factor",
+        "tooltip": "How much applets grow when you hover over the panel",
+        "dependency": "right-enabled"
+    }
+}
